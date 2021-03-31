@@ -1,0 +1,129 @@
+#include<windows.h>
+#include<stdio.h>
+#include<string>
+#include <iostream>
+#include <fstream>
+
+//include windows and name of COM port need to be changed for unix machines
+
+int Status;
+DWORD bytecount = 0;
+char data[32] = {0};
+HANDLE ComPort;
+COMMTIMEOUTS timeouts;
+std::string usrreq = ""; 
+//char* buffer;
+long filelen;
+
+
+void ReadData() {
+    FlushFileBuffers(ComPort);
+
+    if (!ReadFile(ComPort, data, (sizeof(data) - 1), &bytecount, NULL)) {//error handling for failure to read COM port
+        printf("error reading serial data");
+    }
+
+    //printf("%ld bytes read\n", sizeof(data));
+
+    for (int i = 0; i < 32; i++) {//converting input from byte array to string
+        //printf("%c", data[i]);
+        if (data[i]>=33) {
+            usrreq += data[i];
+        }
+    }
+    //printf("\n");
+
+    //usrreq = data;
+    std::cout << "web page: "<<usrreq; 
+}
+
+void SendData() {
+    /*if (usrreq == "beginner")
+        std::ifstream webpage("keypadBeginner.html");
+    if (usrreq == "experience")
+        std::ifstream webpage("keypadExperience.html");
+    if (usrreq == "admin")
+        std::ifstream webpage("keypadAdmin.html");
+    */
+
+
+    //convert webpage to byte array
+    std::ifstream webpage(usrreq);
+    webpage.seekg(0, std::ios::end);
+    size_t len = webpage.tellg();
+    char* buffer = new char[len];
+    webpage.seekg(0, std::ios::beg);
+    webpage.read(buffer, len);
+    webpage.close();
+    
+    
+    //printing failure or not and byte array size
+    if (buffer == NULL)
+        printf("failure converting file to bytes");
+    else
+        printf("file converted to bytes. Size: %d", len);
+
+
+    
+    
+}
+
+void ResetData() {//reset data in case of bad read
+    for (int i = 0; i < sizeof(data);i++) {
+        data[i] = 0;
+    }
+
+}
+
+int main(){
+    //open serial port
+    ComPort = CreateFile(L"COM7",                //port name
+        GENERIC_READ | GENERIC_WRITE, //Read/Write
+        0,                            // No Sharing
+        0,                         // No Security
+        OPEN_EXISTING,// Open existing port only
+        FILE_ATTRIBUTE_NORMAL,            // Non Overlapped I/O
+        0);        // Null for Comm Devices
+
+    if (ComPort == INVALID_HANDLE_VALUE)
+        printf("Error in opening serial port\n");
+    else
+        printf("opening serial port successful\n");
+
+
+    DCB serialParams = { 0 };
+    serialParams.DCBlength = sizeof(serialParams);
+
+    //set COM port parameters
+    GetCommState(ComPort, &serialParams);
+    serialParams.BaudRate = 9600;
+    serialParams.ByteSize = 8;
+    serialParams.StopBits = ONESTOPBIT;
+    serialParams.Parity = NOPARITY;
+    SetCommState(ComPort, &serialParams);
+
+    // Set timeouts
+    COMMTIMEOUTS timeout = { 0 };
+    timeout.ReadIntervalTimeout = 500;
+    timeout.ReadTotalTimeoutConstant = 500;
+    timeout.ReadTotalTimeoutMultiplier = 50;
+    timeout.WriteTotalTimeoutConstant = 500;
+    timeout.WriteTotalTimeoutMultiplier = 100;
+
+    SetCommTimeouts(ComPort, &timeout);
+
+    
+    
+    while (ComPort != INVALID_HANDLE_VALUE) {
+        while (usrreq == "") {//waiting for user request
+            ReadData();
+        }
+        printf("finished reading data");
+        SendData();
+        break;
+    }
+    
+    CloseHandle(ComPort);//Closing the Serial Port
+
+    return 0;
+}
