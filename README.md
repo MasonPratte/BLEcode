@@ -10,7 +10,7 @@ download nrf connect app on phone
 
 find nrf_uart device and connect
 
-run main.c server program on computer (needs to be adjusted if on UNIX machine)
+run server program on computer (needs to be adjusted if on UNIX machine)
 
 if html files are in same directory as the program, you can send exact webpage name and webpage will be opened and converted to byte array
 
