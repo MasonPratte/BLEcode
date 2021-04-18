@@ -7,18 +7,13 @@
 //using namespace std;
 
 int Status;
-DWORD bytecount = 0;//amount of bytes read
-char data[32] = {0};//char data received from port
+DWORD bytecount = 0;//amount of bytes read or written
 HANDLE ComPort;
 COMMTIMEOUTS timeouts;
 std::string usrreq = ""; //string var for request received from com port
-//char* buffer;
-int numpackets;//var for number of packets
-char packet[64] = {0}; //character packet to send
-int index=0;
-int packetsize = 64;
 
-void makepkt(char* packet, char* bytearray, int size, int startpoint) {
+
+void makepkt(char* packet, char* bytearray, int size, int startpoint) {//function to make 64 byte or smaller packets
     int i = 0;
     while (i<size) {
         packet[i] = bytearray[(startpoint + i)];
@@ -28,6 +23,7 @@ void makepkt(char* packet, char* bytearray, int size, int startpoint) {
 }
 
 void ReadData() {
+    char data[32] = { 0 };//char data received from port
     FlushFileBuffers(ComPort);
 
     if (!ReadFile(ComPort, data, (sizeof(data) - 1), &bytecount, NULL)) {
@@ -45,18 +41,41 @@ void ReadData() {
     //printf("\n");
 
     //usrreq = data;
-    std::cout << "web page: "<<usrreq <<"\n";
+    std::cout << "request: "<<usrreq <<"\n";
 }
 
 void SendData() {
+    std::string filepath = ""; //string for storing selected file path
+    int numpackets;//var for number of packets
+    char packet[64] = { 0 }; //character packet to send
+    int index = 0;
+    int packetsize = 64;
+    
+    if (usrreq == "admin") {                  //if statements set file path
+        filepath = "../keypadAdmin.html";
+    }
+    else if (usrreq == "beginner") {
+        filepath = "../keypadBeginner.html";
+    }
+    else if (usrreq == "experience") {
+        filepath = "../keypadExperience.html";
+    }
+    else if (usrreq == "styles") {
+        filepath = "../styles/style.css";
+    }
+    else if (usrreq == "scripts") {
+        filepath = "../scripts/keypad.js";
+    }
 
-    std::ifstream webpage(usrreq);
-    webpage.seekg(0, std::ios::end);
-    size_t len = webpage.tellg();
+    std::cout << filepath;
+    std::ifstream file(filepath);
+
+    file.seekg(0, std::ios::end);
+    size_t len = file.tellg();
     char* buffer = new char[len];
-    webpage.seekg(0, std::ios::beg);
-    webpage.read(buffer, len);
-    webpage.close();
+    file.seekg(0, std::ios::beg);
+    file.read(buffer, len);
+    file.close();
     
 
     if (buffer == NULL)
@@ -69,6 +88,16 @@ void SendData() {
     if ((len%64)!=0) {
         numpackets += 1;
         printf("1 non 64 byte packet made\n");
+    }
+
+    std::string tmp = std::to_string(len);
+    char const* len_arr = tmp.c_str();    //converting length of file to char array to send to smart device
+
+    if (!WriteFile(ComPort, len_arr, sizeof(len_arr), &bytecount, NULL)) {
+        printf("error writing serial data");
+    }
+    else{
+        printf("file size sent");
     }
 
     while (numpackets > 0) {
@@ -89,19 +118,13 @@ void SendData() {
         numpackets--;
     }
     
-    
+    usrreq = ""; //resetting ussrreq var for next file request
 }
 
-void ResetData() {
-    for (int i = 0; i < sizeof(data);i++) {
-        data[i] = 0;
-    }
-
-}
 
 int main(){
 
-    ComPort = CreateFile(L"COM7",                //port name
+    ComPort = CreateFile(L"COM3",                //port name
         GENERIC_READ | GENERIC_WRITE, //Read/Write
         0,                            // No Sharing
         0,                         // No Security
@@ -141,9 +164,8 @@ int main(){
         while (usrreq == "") {
             ReadData();
         }
-        printf("finished reading data \n");
+        printf("finished reading request \n");
         SendData();
-        break;
     }
 
     //printf("error in program");
