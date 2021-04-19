@@ -158,7 +158,7 @@ int main(){
 
     SetCommTimeouts(ComPort, &timeout);
 
-    
+    Sleep(1);
     
     while (ComPort != INVALID_HANDLE_VALUE) {
         while (usrreq == "") {
