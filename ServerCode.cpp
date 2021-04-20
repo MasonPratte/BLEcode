@@ -165,6 +165,9 @@ int main(){
             ReadData();
         }
         printf("finished reading request \n");
+        if (usrreq== "exit"||usrreq == "stop") {
+            break;
+        }
         SendData();
     }
 
