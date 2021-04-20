@@ -26,7 +26,7 @@ void ReadData() {
     char data[32] = { 0 };//char data received from port
     FlushFileBuffers(ComPort);
 
-    if (!ReadFile(ComPort, data, (sizeof(data) - 1), &bytecount, NULL)) {
+    if (!ReadFile(ComPort, data, 32, &bytecount, NULL)) {
         printf("error reading serial data");
     }
 
