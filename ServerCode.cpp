@@ -49,8 +49,10 @@ void SendData() {
     int numpackets;//var for number of packets
     char packet[64] = { 0 }; //character packet to send
     int index = 0;
-    int packetsize = 64;
+    int packetsize = 63;
     
+    packet[63] = '\n';
+
     if (usrreq == "admin") {                  //if statements set file path
         filepath = "../keypadAdmin.html";
     }
@@ -83,11 +85,11 @@ void SendData() {
     else
         printf("file converted to bytes. Size: %d\n", len);
 
-    numpackets = len / 64;
-    printf("%d 64 byte packets made\n",numpackets);
-    if ((len%64)!=0) {
+    numpackets = len / 63;
+    printf("%d 63 byte packets made\n",numpackets);
+    if ((len%63)!=0) {
         numpackets += 1;
-        printf("1 non 64 byte packet made\n");
+        printf("1 non 63 byte packet made\n");
     }
 
     std::string tmp = std::to_string(len);
@@ -102,12 +104,12 @@ void SendData() {
 
     while (numpackets > 0) {
 
-        if (numpackets>1 || (len%64)==0) {
-            makepkt(packet, buffer, 64, index);
+        if (numpackets>1 || (len%63)==0) {
+            makepkt(packet, buffer, 63, index);
         }
         else {
-            makepkt(packet, buffer, (len%64), index);
-            packetsize = (len%64);
+            makepkt(packet, buffer, (len%63), index);
+            packetsize = (len%63);
         }
 
 
