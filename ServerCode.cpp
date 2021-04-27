@@ -17,6 +17,7 @@ void makepkt(char* packet, char* bytearray, int size, int startpoint) {//functio
     int i = 0;
     while (i<size) {
         packet[i] = bytearray[(startpoint + i)];
+        printf("%c",packet[i]);
         i++;
     }
 
@@ -51,7 +52,7 @@ void SendData() {
     int index = 0;
     int packetsize = 63;
     
-    packet[63] = '\n';
+    packet[63] = 4;
 
     if (usrreq == "admin") {                  //if statements set file path
         filepath = "../keypadAdmin.html";
@@ -87,9 +88,9 @@ void SendData() {
 
     for (int i = 0; i < len; i++) {
        
-        if (buffer[i] == '\n') {
-            buffer[i] = 7;
-        }
+       // if (buffer[i] == '\n') {
+         //   buffer[i] = 7;
+        //}
         printf("%c", buffer[i]);
     }
 
@@ -108,7 +109,7 @@ void SendData() {
     }
     else{
         printf("file size sent");
-        Sleep(2000);
+        Sleep(10000);
     }
 
     while (numpackets > 0) {
@@ -126,7 +127,7 @@ void SendData() {
         if (!WriteFile(ComPort, packet, packetsize , &bytecount, NULL)) {
             printf("error writing serial data");
         }
-        printf("%ld bytes written\n", bytecount);
+        //printf("%ld bytes written\n", bytecount);
         Sleep(2000);
         numpackets--;
     }
