@@ -85,6 +85,14 @@ void SendData() {
     else
         printf("file converted to bytes. Size: %d\n", len);
 
+    for (int i = 0; i < len; i++) {
+       
+        if (buffer[i] == '\n') {
+            buffer[i] = 7;
+        }
+        printf("%c", buffer[i]);
+    }
+
     numpackets = len / 63;
     printf("%d 63 byte packets made\n",numpackets);
     if ((len%63)!=0) {
@@ -100,12 +108,14 @@ void SendData() {
     }
     else{
         printf("file size sent");
+        Sleep(2000);
     }
 
     while (numpackets > 0) {
 
         if (numpackets>1 || (len%63)==0) {
             makepkt(packet, buffer, 63, index);
+            index += 63;
         }
         else {
             makepkt(packet, buffer, (len%63), index);
@@ -117,6 +127,7 @@ void SendData() {
             printf("error writing serial data");
         }
         printf("%ld bytes written\n", bytecount);
+        Sleep(2000);
         numpackets--;
     }
     
