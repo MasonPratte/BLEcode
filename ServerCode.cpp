@@ -52,7 +52,7 @@ void SendData() {
     int index = 0;
     int packetsize = 63;
     
-    packet[63] = 4;
+    packet[63] = '\4';
 
     if (usrreq == "admin") {                  //if statements set file path
         filepath = "../keypadAdmin.html";
