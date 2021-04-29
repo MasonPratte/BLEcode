@@ -20,7 +20,7 @@ void makepkt(char* packet, char* bytearray, int size, int startpoint) {//functio
         printf("%c",packet[i]);
         i++;
     }
-
+    printf("\n\n");
 }
 
 void ReadData() {
@@ -48,11 +48,11 @@ void ReadData() {
 void SendData() {
     std::string filepath = ""; //string for storing selected file path
     int numpackets;//var for number of packets
-    char packet[64] = { 0 }; //character packet to send
+    char packet[62] = { 0 }; //character packet to send
     int index = 0;
-    int packetsize = 63;
+    int packetsize = 61;
     
-    packet[63] = '\4';
+    packet[61] = '\r';
 
     if (usrreq == "admin") {                  //if statements set file path
         filepath = "../keypadAdmin.html";
@@ -94,41 +94,43 @@ void SendData() {
         printf("%c", buffer[i]);
     }
 
-    numpackets = len / 63;
-    printf("%d 63 byte packets made\n",numpackets);
-    if ((len%63)!=0) {
+    numpackets = len / 61;
+    printf("%d 61 byte packets made\n",numpackets);
+    if ((len%61)!=0) {
         numpackets += 1;
-        printf("1 non 63 byte packet made\n");
+        printf("1 non 61 byte packet made\n");
     }
 
-    std::string tmp = std::to_string(len);
+    std::string tmp = std::to_string(numpackets);
+    tmp = tmp + "\r";
     char const* len_arr = tmp.c_str();    //converting length of file to char array to send to smart device
-
-    if (!WriteFile(ComPort, len_arr, sizeof(len_arr), &bytecount, NULL)) {
+    
+    FlushFileBuffers(ComPort);
+    if (!WriteFile(ComPort, len_arr, ( (sizeof(len_arr) / sizeof(len_arr[0])) -1), &bytecount, NULL)) {
         printf("error writing serial data");
     }
     else{
         printf("file size sent");
-        Sleep(10000);
+        Sleep(100);
     }
 
     while (numpackets > 0) {
 
-        if (numpackets>1 || (len%63)==0) {
-            makepkt(packet, buffer, 63, index);
-            index += 63;
+        if (numpackets>1 || (len%61)==0) {
+            makepkt(packet, buffer, 61, index);
+            index += 61;
         }
         else {
-            makepkt(packet, buffer, (len%63), index);
-            packetsize = (len%63);
+            makepkt(packet, buffer, (len%61), index);
+            packetsize = (len%61);
         }
 
 
-        if (!WriteFile(ComPort, packet, packetsize , &bytecount, NULL)) {
+        if (!WriteFile(ComPort, packet, (packetsize +1) , &bytecount, NULL)) {
             printf("error writing serial data");
         }
         //printf("%ld bytes written\n", bytecount);
-        Sleep(2000);
+        Sleep(100);
         numpackets--;
     }
     
