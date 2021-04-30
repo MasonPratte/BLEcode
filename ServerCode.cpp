@@ -15,9 +15,9 @@ std::string usrreq = ""; //string var for request received from com port
 
 void makepkt(char* packet, char* bytearray, int size, int startpoint) {//function to make 64 byte or smaller packets
     int i = 0;
-    while (i<size) {
+    while (i < size) {
         packet[i] = bytearray[(startpoint + i)];
-        printf("%c",packet[i]);
+        printf("%c", packet[i]);
         i++;
     }
     printf("\n\n");
@@ -35,14 +35,14 @@ void ReadData() {
 
     for (int i = 0; i < 32; i++) {
         //printf("%c", data[i]);
-        if (data[i]>=33) {
+        if (data[i] >= 33) {
             usrreq += data[i];
         }
     }
     //printf("\n");
 
     //usrreq = data;
-    std::cout << "request: "<<usrreq <<"\n";
+    std::cout << "request: " << usrreq << "\n";
 }
 
 void SendData() {
@@ -51,96 +51,105 @@ void SendData() {
     char packet[62] = { 0 }; //character packet to send
     int index = 0;
     int packetsize = 61;
-    
+    bool isFile = true;
+
     packet[61] = '\r';
 
     if (usrreq == "admin") {                  //if statements set file path
-        filepath = "../keypadAdmin.html";
+        filepath = "C:/Users/Jeffrey/Desktop/server/keypadAdmin.html";
     }
     else if (usrreq == "beginner") {
-        filepath = "../keypadBeginner.html";
+        filepath = "C:/Users/Jeffrey/Desktop/server/keypadBeginner.html";
     }
     else if (usrreq == "experience") {
-        filepath = "../keypadExperience.html";
+        filepath = "C:/Users/Jeffrey/Desktop/server/keypadExperience.html";
     }
     else if (usrreq == "styles") {
-        filepath = "../styles/style.css";
+        filepath = "C:/Users/Jeffrey/Desktop/server/styles/style.css";
     }
     else if (usrreq == "scripts") {
-        filepath = "../scripts/keypad.js";
+        filepath = "C:/Users/Jeffrey/Desktop/server/scripts/keypad.js";
+    }
+    else if (usrreq == "report") {
+        filepath = "C:/Users/Jeffrey/Desktop/server/report/RobotDiagnostic.txt";
+    }
+    else {
+        isFile = false;
     }
 
-    std::cout << filepath;
-    std::ifstream file(filepath);
+    if (isFile) {
+        std::cout << filepath;
+        std::ifstream file(filepath);
 
-    file.seekg(0, std::ios::end);
-    size_t len = file.tellg();
-    char* buffer = new char[len];
-    file.seekg(0, std::ios::beg);
-    file.read(buffer, len);
-    file.close();
-    
+        file.seekg(0, std::ios::end);
+        size_t len = file.tellg();
+        char* buffer = new char[len];
+        file.seekg(0, std::ios::beg);
+        file.read(buffer, len);
+        file.close();
 
-    if (buffer == NULL)
-        printf("failure converting file to bytes");
-    else
-        printf("file converted to bytes. Size: %d\n", len);
 
-    for (int i = 0; i < len; i++) {
-       
-       // if (buffer[i] == '\n') {
-         //   buffer[i] = 7;
-        //}
-        printf("%c", buffer[i]);
-    }
+        if (buffer == NULL)
+            printf("\nfailure converting file to bytes");
+        else
+            printf("\nfile converted to bytes. Size: %d\n", len);
 
-    numpackets = len / 61;
-    printf("%d 61 byte packets made\n",numpackets);
-    if ((len%61)!=0) {
-        numpackets += 1;
-        printf("1 non 61 byte packet made\n");
-    }
+        for (int i = 0; i < len; i++) {
 
-    std::string tmp = std::to_string(numpackets);
-    tmp = tmp + "\r";
-    char const* len_arr = tmp.c_str();    //converting length of file to char array to send to smart device
-    
-    FlushFileBuffers(ComPort);
-    if (!WriteFile(ComPort, len_arr, ( (sizeof(len_arr) / sizeof(len_arr[0])) -1), &bytecount, NULL)) {
-        printf("error writing serial data");
-    }
-    else{
-        printf("file size sent");
-        Sleep(100);
-    }
-
-    while (numpackets > 0) {
-
-        if (numpackets>1 || (len%61)==0) {
-            makepkt(packet, buffer, 61, index);
-            index += 61;
-        }
-        else {
-            makepkt(packet, buffer, (len%61), index);
-            packetsize = (len%61);
+            // if (buffer[i] == '\n') {
+              //   buffer[i] = 7;
+             //}
+            printf("%c", buffer[i]);
         }
 
+        numpackets = len / 61;
+        printf("%d 61 byte packets made\n", numpackets);
+        if ((len % 61) != 0) {
+            numpackets += 1;
+            printf("1 non 61 byte packet made\n");
+        }
 
-        if (!WriteFile(ComPort, packet, (packetsize +1) , &bytecount, NULL)) {
+        std::string tmp = std::to_string(numpackets);
+        tmp = tmp + "\r";
+        char const* len_arr = tmp.c_str();    //converting length of file to char array to send to smart device
+
+        FlushFileBuffers(ComPort);
+        if (!WriteFile(ComPort, len_arr, ((sizeof(len_arr) / sizeof(len_arr[0])) - 1), &bytecount, NULL)) {
             printf("error writing serial data");
         }
-        //printf("%ld bytes written\n", bytecount);
-        Sleep(100);
-        numpackets--;
+        else {
+            printf("file size sent");
+            Sleep(100);
+        }
+
+        while (numpackets > 0) {
+
+            if (numpackets > 1 || (len % 61) == 0) {
+                makepkt(packet, buffer, 61, index);
+                index += 61;
+            }
+            else {
+                makepkt(packet, buffer, (len % 61), index);
+                packetsize = (len % 61);
+            }
+
+
+            if (!WriteFile(ComPort, packet, (packetsize + 1), &bytecount, NULL)) {
+                printf("error writing serial data");
+            }
+            //printf("%ld bytes written\n", bytecount);
+            Sleep(100);
+            numpackets--;
+        }
     }
-    
+
     usrreq = ""; //resetting ussrreq var for next file request
 }
 
 
-int main(){
+int main() {
 
-    ComPort = CreateFile(L"COM3",                //port name
+    ComPort = CreateFile(L"COM6",                //port name
         GENERIC_READ | GENERIC_WRITE, //Read/Write
         0,                            // No Sharing
         0,                         // No Security
@@ -175,13 +184,13 @@ int main(){
     SetCommTimeouts(ComPort, &timeout);
 
     Sleep(1);
-    
+
     while (ComPort != INVALID_HANDLE_VALUE) {
         while (usrreq == "") {
             ReadData();
         }
         printf("finished reading request \n");
-        if (usrreq== "exit"||usrreq == "stop") {
+        if (usrreq == "exit" || usrreq == "stop") {
             break;
         }
         SendData();
