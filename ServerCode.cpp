@@ -70,7 +70,7 @@ void SendData() {
     else if (usrreq == "scripts") {
         filepath = "C:/Users/Jeffrey/Desktop/server/scripts/keypad.js";
     }
-    else if (usrreq == "report") {
+    else if (usrreq == "Report") {
         filepath = "C:/Users/Jeffrey/Desktop/server/report/RobotDiagnostic.txt";
     }
     else {
@@ -106,7 +106,7 @@ void SendData() {
         printf("%d 61 byte packets made\n", numpackets);
         if ((len % 61) != 0) {
             numpackets += 1;
-            printf("1 non 61 byte packet made\n");
+            printf("last 61 byte packet ending with CD as filler\n");
         }
 
         std::string tmp = std::to_string(numpackets);
